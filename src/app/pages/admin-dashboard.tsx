@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Logo } from "../components/logo";
+import { FinanceModule } from "../components/finance-module";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -39,7 +40,8 @@ import {
   Eye,
   Pencil,
   Trash2,
-  Archive
+  Archive,
+  TrendingUp
 } from "lucide-react";
 import { Link } from "react-router";
 import { useLanguage } from "../contexts/language";
@@ -327,6 +329,15 @@ export function AdminDashboard() {
             >
               <Users className="w-4 h-4 mr-3" />
               {t('Customers')}
+            </Button>
+
+            <Button
+              variant={activeTab === "finance" ? "secondary" : "ghost"}
+              className={`w-full justify-start ${activeTab === "finance" ? 'bg-gradient-to-r from-[#EF4444]/10 to-[#1E40AF]/10' : ''}`}
+              onClick={() => setActiveTab("finance")}
+            >
+              <TrendingUp className="w-4 h-4 mr-3" />
+              {t('Finance')}
             </Button>
 
             <Button
@@ -767,6 +778,10 @@ export function AdminDashboard() {
             <h3 className="mb-4">{t('Customer Management')}</h3>
             <p className="text-muted-foreground">{t('Customer database and management tools will be displayed here.')}</p>
           </Card>
+        )}
+
+        {activeTab === "finance" && (
+          <FinanceModule />
         )}
 
         {activeTab === "reports" && (
