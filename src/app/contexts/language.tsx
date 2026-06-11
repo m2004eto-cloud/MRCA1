@@ -196,7 +196,6 @@ const dictionary: Record<string, string> = {
   "This booking is awaiting approval. Review the details and approve or reject.":
     "هذا الحجز بانتظار الموافقة. راجع التفاصيل ووافق أو ارفض.",
   "Reject": "رفض",
-  "Approve": "موافقة",
   "Sync Salik Data": "مزامنة بيانات سالك",
   "Syncing...": "جارٍ المزامنة...",
   "Document Review": "مراجعة المستند",
