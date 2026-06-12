@@ -63,6 +63,8 @@ export function AdminDashboard() {
   const [isSaving, setIsSaving] = useState(false);
   const [editingVehicleId, setEditingVehicleId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FleetVehicle | null>(null);
+  const [salikEditOpen, setSalikEditOpen] = useState(false);
+  const [editingSalikVehicle, setEditingSalikVehicle] = useState<FleetVehicle | null>(null);
   const isEditMode = editingVehicleId !== null;
 
   const vehicleImageInputRef = useRef<HTMLInputElement>(null);
@@ -274,6 +276,37 @@ export function AdminDashboard() {
     setIsLoading(false);
     setDocumentReviewOpen(false);
     toast.error(t('Document rejected'));
+  };
+
+  const handleEditSalik = (vehicle: FleetVehicle) => {
+    setEditingSalikVehicle(vehicle);
+    setSalikEditOpen(true);
+  };
+
+  const handleSaveSalik = async () => {
+    if (!editingSalikVehicle) return;
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setFleet(prev => prev.map(v =>
+      v.id === editingSalikVehicle.id
+        ? { ...v, salikStatus: 'Synced' }
+        : v
+    ));
+    setIsLoading(false);
+    setSalikEditOpen(false);
+    toast.success(t('Salik data updated successfully'));
+  };
+
+  const handleSyncNow = async (vehicle: FleetVehicle) => {
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setFleet(prev => prev.map(v =>
+      v.id === vehicle.id
+        ? { ...v, salikStatus: 'Synced' }
+        : v
+    ));
+    setIsLoading(false);
+    toast.success(t('Salik data synced successfully'));
   };
 
   return (
@@ -739,31 +772,43 @@ export function AdminDashboard() {
                       <TableCell>{vehicle.model}</TableCell>
                       <TableCell className="font-mono text-sm">{vehicle.licensePlate}</TableCell>
                       <TableCell>
-                        <Badge variant={
-                          vehicle.salikStatus === 'Synced' ? 'default' :
-                          vehicle.salikStatus === 'Pending' ? 'secondary' :
-                          'destructive'
-                        }>
-                          {t(vehicle.salikStatus)}
-                        </Badge>
+                        <span className={vehicle.fines > 0 ? "text-[#EF4444]" : "text-muted-foreground"}>
+                          AED {vehicle.fines > 0 ? vehicle.fines : "000"}
+                        </span>
                       </TableCell>
                       <TableCell>
                         {vehicle.fines > 0 ? (
                           <span className="text-[#EF4444]">AED {vehicle.fines}</span>
                         ) : (
-                          <span className="text-muted-foreground">-</span>
+                          <span className="text-muted-foreground">AED 000</span>
                         )}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{t('2 hours ago')}</TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleSyncSalik(vehicle)}
-                        >
-                          <RefreshCw className="w-3 h-3 mr-1" />
-                          {t('Sync Now')}
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title={t('Edit')}
+                            onClick={() => handleEditSalik(vehicle)}
+                            disabled={isLoading}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title={t('Sync Now')}
+                            onClick={() => handleSyncNow(vehicle)}
+                            disabled={isLoading}
+                          >
+                            {isLoading ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <RefreshCw className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1305,6 +1350,71 @@ export function AdminDashboard() {
             >
               {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {t('Approve')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Salik Edit Dialog */}
+      <Dialog open={salikEditOpen} onOpenChange={setSalikEditOpen}>
+        <DialogContent className="backdrop-blur-xl bg-white/95 max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('Edit Salik Status')}</DialogTitle>
+            <DialogDescription>
+              {editingSalikVehicle && `${editingSalikVehicle.model} • ${editingSalikVehicle.licensePlate}`}
+            </DialogDescription>
+          </DialogHeader>
+
+          {editingSalikVehicle && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>{t('Current Status')}</Label>
+                <div className="p-3 bg-muted rounded-lg">
+                  <Badge variant={
+                    editingSalikVehicle.salikStatus === 'Synced' ? 'default' :
+                    editingSalikVehicle.salikStatus === 'Pending' ? 'secondary' :
+                    'destructive'
+                  }>
+                    {t(editingSalikVehicle.salikStatus)}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t('Outstanding Fines')}</Label>
+                <div className="p-3 bg-muted rounded-lg text-sm font-mono">
+                  {editingSalikVehicle.fines > 0 ? (
+                    <span className="text-[#EF4444]">AED {editingSalikVehicle.fines}</span>
+                  ) : (
+                    <span className="text-muted-foreground">AED 000</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t('Last Sync')}</Label>
+                <div className="p-3 bg-muted rounded-lg text-sm text-muted-foreground">
+                  {t('2 hours ago')}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setSalikEditOpen(false)}
+              disabled={isLoading}
+            >
+              {t('Cancel')}
+            </Button>
+            <Button
+              className="bg-gradient-to-r from-[#EF4444] to-[#1E40AF]"
+              onClick={handleSaveSalik}
+              disabled={isLoading}
+            >
+              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {t('Update')}
             </Button>
           </DialogFooter>
         </DialogContent>
