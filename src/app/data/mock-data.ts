@@ -655,3 +655,225 @@ export const financialReports: FinancialReport[] = [
     totalEquity: 1824720,
   },
 ];
+
+// Authentication Module
+export interface User {
+  id: string;
+  email: string;
+  password: string; // Hashed in production
+  firstName: string;
+  lastName: string;
+  role: 'admin' | 'manager' | 'staff' | 'customer';
+  status: 'active' | 'inactive' | 'suspended';
+  createdAt: string;
+  lastLogin?: string;
+  phone?: string;
+  avatar?: string;
+  twoFactorEnabled: boolean;
+}
+
+export interface AuthSession {
+  id: string;
+  userId: string;
+  token: string;
+  refreshToken: string;
+  expiresAt: string;
+  createdAt: string;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+export interface Permission {
+  id: string;
+  name: string;
+  description: string;
+  resource: string;
+  action: 'read' | 'create' | 'update' | 'delete';
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  description: string;
+  permissions: string[]; // Permission IDs
+}
+
+export interface LoginLog {
+  id: string;
+  userId: string;
+  timestamp: string;
+  ipAddress: string;
+  userAgent: string;
+  status: 'success' | 'failed';
+  reason?: string;
+}
+
+export interface PasswordReset {
+  id: string;
+  userId: string;
+  token: string;
+  expiresAt: string;
+  createdAt: string;
+  used: boolean;
+}
+
+// Mock Users
+export const users: User[] = [
+  {
+    id: 'USER001',
+    email: 'admin@maximum.ae',
+    password: 'hashed_admin_password_123', // Hashed in production
+    firstName: 'Ahmed',
+    lastName: 'Al Mansouri',
+    role: 'admin',
+    status: 'active',
+    createdAt: '2026-01-01',
+    lastLogin: '2026-06-11',
+    phone: '+971501234567',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmed',
+    twoFactorEnabled: true,
+  },
+  {
+    id: 'USER002',
+    email: 'manager@maximum.ae',
+    password: 'hashed_manager_password_456',
+    firstName: 'Fatima',
+    lastName: 'Al Maktoum',
+    role: 'manager',
+    status: 'active',
+    createdAt: '2026-01-15',
+    lastLogin: '2026-06-10',
+    phone: '+971502345678',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fatima',
+    twoFactorEnabled: false,
+  },
+  {
+    id: 'USER003',
+    email: 'staff@maximum.ae',
+    password: 'hashed_staff_password_789',
+    firstName: 'Mohammed',
+    lastName: 'Al Hariri',
+    role: 'staff',
+    status: 'active',
+    createdAt: '2026-02-01',
+    lastLogin: '2026-06-11',
+    phone: '+971503456789',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mohammed',
+    twoFactorEnabled: false,
+  },
+  {
+    id: 'USER004',
+    email: 'customer@maximum.ae',
+    password: 'hashed_customer_password_000',
+    firstName: 'Sarah',
+    lastName: 'Johnson',
+    role: 'customer',
+    status: 'active',
+    createdAt: '2026-03-10',
+    lastLogin: '2026-06-09',
+    phone: '+971504567890',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
+    twoFactorEnabled: false,
+  },
+];
+
+// Mock Permissions
+export const permissions: Permission[] = [
+  // Dashboard
+  { id: 'PERM001', name: 'View Dashboard', description: 'Access main dashboard', resource: 'dashboard', action: 'read' },
+  // Fleet
+  { id: 'PERM002', name: 'View Fleet', description: 'View fleet vehicles', resource: 'fleet', action: 'read' },
+  { id: 'PERM003', name: 'Create Vehicle', description: 'Add new vehicle', resource: 'fleet', action: 'create' },
+  { id: 'PERM004', name: 'Edit Vehicle', description: 'Edit vehicle details', resource: 'fleet', action: 'update' },
+  { id: 'PERM005', name: 'Delete Vehicle', description: 'Remove vehicle', resource: 'fleet', action: 'delete' },
+  // Bookings
+  { id: 'PERM006', name: 'View Bookings', description: 'View all bookings', resource: 'bookings', action: 'read' },
+  { id: 'PERM007', name: 'Create Booking', description: 'Create new booking', resource: 'bookings', action: 'create' },
+  { id: 'PERM008', name: 'Approve Booking', description: 'Approve pending booking', resource: 'bookings', action: 'update' },
+  // Finance
+  { id: 'PERM009', name: 'View Finance', description: 'Access finance module', resource: 'finance', action: 'read' },
+  { id: 'PERM010', name: 'Create Invoice', description: 'Create new invoice', resource: 'finance', action: 'create' },
+  { id: 'PERM011', name: 'Approve Expense', description: 'Approve expenses', resource: 'finance', action: 'update' },
+  // Users
+  { id: 'PERM012', name: 'View Users', description: 'View user list', resource: 'users', action: 'read' },
+  { id: 'PERM013', name: 'Create User', description: 'Create new user', resource: 'users', action: 'create' },
+  { id: 'PERM014', name: 'Edit User', description: 'Edit user details', resource: 'users', action: 'update' },
+  { id: 'PERM015', name: 'Delete User', description: 'Remove user', resource: 'users', action: 'delete' },
+  // Reports
+  { id: 'PERM016', name: 'View Reports', description: 'Access reports', resource: 'reports', action: 'read' },
+  { id: 'PERM017', name: 'Export Reports', description: 'Export report data', resource: 'reports', action: 'read' },
+  // Settings
+  { id: 'PERM018', name: 'View Settings', description: 'Access settings', resource: 'settings', action: 'read' },
+  { id: 'PERM019', name: 'Modify Settings', description: 'Change system settings', resource: 'settings', action: 'update' },
+];
+
+// Mock Roles
+export const roles: Role[] = [
+  {
+    id: 'ROLE001',
+    name: 'Admin',
+    description: 'Full system access',
+    permissions: ['PERM001', 'PERM002', 'PERM003', 'PERM004', 'PERM005', 'PERM006', 'PERM007', 'PERM008', 'PERM009', 'PERM010', 'PERM011', 'PERM012', 'PERM013', 'PERM014', 'PERM015', 'PERM016', 'PERM017', 'PERM018', 'PERM019'],
+  },
+  {
+    id: 'ROLE002',
+    name: 'Manager',
+    description: 'Fleet and booking management',
+    permissions: ['PERM001', 'PERM002', 'PERM003', 'PERM004', 'PERM006', 'PERM007', 'PERM008', 'PERM009', 'PERM010', 'PERM016'],
+  },
+  {
+    id: 'ROLE003',
+    name: 'Staff',
+    description: 'Limited operational access',
+    permissions: ['PERM001', 'PERM002', 'PERM006', 'PERM009', 'PERM016'],
+  },
+  {
+    id: 'ROLE004',
+    name: 'Customer',
+    description: 'Customer portal access',
+    permissions: ['PERM001', 'PERM006', 'PERM007'],
+  },
+];
+
+// Mock Sessions
+export const authSessions: AuthSession[] = [
+  {
+    id: 'SESSION001',
+    userId: 'USER001',
+    token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.admin_token_example',
+    refreshToken: 'refresh_token_admin_12345',
+    expiresAt: '2026-06-12',
+    createdAt: '2026-06-11',
+    ipAddress: '192.168.1.100',
+    userAgent: 'Mozilla/5.0 Chrome/91.0',
+  },
+];
+
+// Mock Login Logs
+export const loginLogs: LoginLog[] = [
+  {
+    id: 'LOG001',
+    userId: 'USER001',
+    timestamp: '2026-06-11T14:30:00Z',
+    ipAddress: '192.168.1.100',
+    userAgent: 'Mozilla/5.0 Chrome/91.0',
+    status: 'success',
+  },
+  {
+    id: 'LOG002',
+    userId: 'USER002',
+    timestamp: '2026-06-10T09:15:00Z',
+    ipAddress: '192.168.1.101',
+    userAgent: 'Mozilla/5.0 Firefox/89.0',
+    status: 'success',
+  },
+  {
+    id: 'LOG003',
+    userId: 'USER001',
+    timestamp: '2026-06-09T18:45:00Z',
+    ipAddress: '192.168.1.102',
+    userAgent: 'Mozilla/5.0 Safari/14.1',
+    status: 'failed',
+    reason: 'Invalid credentials',
+  },
+];

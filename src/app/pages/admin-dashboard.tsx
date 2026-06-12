@@ -43,12 +43,22 @@ import {
   Archive,
   TrendingUp
 } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useLanguage } from "../contexts/language";
+import { useAuth } from "../contexts/auth";
+import { LogOut, User as UserIcon } from "lucide-react";
 
 export function AdminDashboard() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+    toast.success(t("Logged out successfully"));
+  };
   const [vehicleDialogOpen, setVehicleDialogOpen] = useState(false);
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
