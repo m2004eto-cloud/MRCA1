@@ -401,14 +401,53 @@ export function AdminDashboard() {
             </Button>
           </div>
 
-          <div className="mt-8 pt-8 border-t border-white/20">
-            <Button variant="outline" className="w-full" asChild>
+          <div className="mt-8 pt-8 border-t border-white/20 space-y-2">
+            <Button variant="outline" className="w-full justify-start" asChild>
               <Link to="/">
                 <Home className="w-4 h-4 mr-2" />
                 {t('Back to Site')}
               </Link>
             </Button>
+
+            <Button
+              variant="destructive"
+              className="w-full justify-start"
+              onClick={handleLogout}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              {t('Logout')}
+            </Button>
           </div>
+
+          {/* User Profile Section */}
+          {user && (
+            <div className="mt-8 pt-8 border-t border-white/20">
+              <div className="px-3 py-4 bg-white/5 rounded-lg">
+                <div className="flex items-center gap-3 mb-3">
+                  {user.avatar && (
+                    <img
+                      src={user.avatar}
+                      alt={user.firstName}
+                      className="w-10 h-10 rounded-full"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate text-white">
+                      {user.firstName} {user.lastName}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-xs">
+                  <span className="inline-block px-2.5 py-1 rounded-full bg-gradient-to-r from-[#EF4444]/20 to-[#1E40AF]/20 text-[#1E40AF]">
+                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </nav>
       </aside>
 
