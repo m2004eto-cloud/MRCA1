@@ -3,13 +3,15 @@ import { Link, useNavigate } from "react-router";
 import { Logo } from "./logo";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Crown, Sun, Moon, Globe, Menu, X } from "lucide-react";
+import { Crown, Sun, Moon, Globe, Menu, X, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "../contexts/language";
+import { useAuth } from "../contexts/auth";
 
 export function Header() {
   const navigate = useNavigate();
   const { lang, toggleLang, t } = useLanguage();
+  const { isAuthenticated, isLoading } = useAuth();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -109,9 +111,26 @@ export function Header() {
                 </span>
               </Button>
 
-              <Button variant="outline" size="sm" asChild className="hidden md:inline-flex">
-                <Link to="/admin">{t('Admin')}</Link>
-              </Button>
+              {!isLoading && (
+                <>
+                  {isAuthenticated ? (
+                    <Button variant="outline" size="sm" asChild className="hidden md:inline-flex">
+                      <Link to="/admin">{t('Admin')}</Link>
+                    </Button>
+                  ) : (
+                    <Button
+                      className="hidden md:inline-flex bg-gradient-to-r from-[#EF4444] to-[#1E40AF] hover:from-[#DC2626] hover:to-[#1E3A8A] text-white"
+                      size="sm"
+                      asChild
+                    >
+                      <Link to="/login">
+                        <LogIn className="w-4 h-4 mr-2" />
+                        {t('Login')}
+                      </Link>
+                    </Button>
+                  )}
+                </>
+              )}
 
               <Button
                 variant="ghost"
@@ -132,9 +151,26 @@ export function Header() {
               <button onClick={() => handleNavigation('corporate')} className="block w-full text-left py-2 hover:text-[#1E40AF] transition-colors dark:text-white">{t('Corporate')}</button>
               <button onClick={() => handleNavigation('offers')} className="block w-full text-left py-2 hover:text-[#EF4444] transition-colors dark:text-white">{t('Offers')}</button>
               <button onClick={() => handleNavigation('about')} className="block w-full text-left py-2 hover:text-[#1E40AF] transition-colors dark:text-white">{t('About')}</button>
-              <Button variant="outline" size="sm" asChild className="w-full mt-2">
-                <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>{t('Admin')}</Link>
-              </Button>
+              {!isLoading && (
+                <>
+                  {isAuthenticated ? (
+                    <Button variant="outline" size="sm" asChild className="w-full mt-2">
+                      <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>{t('Admin')}</Link>
+                    </Button>
+                  ) : (
+                    <Button
+                      className="w-full mt-2 bg-gradient-to-r from-[#EF4444] to-[#1E40AF] hover:from-[#DC2626] hover:to-[#1E3A8A] text-white"
+                      size="sm"
+                      asChild
+                    >
+                      <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                        <LogIn className="w-4 h-4 mr-2" />
+                        {t('Login')}
+                      </Link>
+                    </Button>
+                  )}
+                </>
+              )}
             </nav>
           )}
         </div>

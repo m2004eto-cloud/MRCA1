@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Logo } from "../components/logo";
+import { FinanceModule } from "../components/finance-module";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -39,14 +40,25 @@ import {
   Eye,
   Pencil,
   Trash2,
-  Archive
+  Archive,
+  TrendingUp
 } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useLanguage } from "../contexts/language";
+import { useAuth } from "../contexts/auth";
+import { LogOut, User as UserIcon } from "lucide-react";
 
 export function AdminDashboard() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+    toast.success(t("Logged out successfully"));
+  };
   const [vehicleDialogOpen, setVehicleDialogOpen] = useState(false);
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
@@ -61,6 +73,8 @@ export function AdminDashboard() {
   const [isSaving, setIsSaving] = useState(false);
   const [editingVehicleId, setEditingVehicleId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FleetVehicle | null>(null);
+  const [salikEditOpen, setSalikEditOpen] = useState(false);
+  const [editingSalikVehicle, setEditingSalikVehicle] = useState<FleetVehicle | null>(null);
   const isEditMode = editingVehicleId !== null;
 
   const vehicleImageInputRef = useRef<HTMLInputElement>(null);
@@ -274,6 +288,37 @@ export function AdminDashboard() {
     toast.error(t('Document rejected'));
   };
 
+  const handleEditSalik = (vehicle: FleetVehicle) => {
+    setEditingSalikVehicle(vehicle);
+    setSalikEditOpen(true);
+  };
+
+  const handleSaveSalik = async () => {
+    if (!editingSalikVehicle) return;
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setFleet(prev => prev.map(v =>
+      v.id === editingSalikVehicle.id
+        ? { ...v, salikStatus: 'Synced' }
+        : v
+    ));
+    setIsLoading(false);
+    setSalikEditOpen(false);
+    toast.success(t('Salik data updated successfully'));
+  };
+
+  const handleSyncNow = async (vehicle: FleetVehicle) => {
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setFleet(prev => prev.map(v =>
+      v.id === vehicle.id
+        ? { ...v, salikStatus: 'Synced' }
+        : v
+    ));
+    setIsLoading(false);
+    toast.success(t('Salik data synced successfully'));
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       {/* Sidebar */}
@@ -330,6 +375,15 @@ export function AdminDashboard() {
             </Button>
 
             <Button
+              variant={activeTab === "finance" ? "secondary" : "ghost"}
+              className={`w-full justify-start ${activeTab === "finance" ? 'bg-gradient-to-r from-[#EF4444]/10 to-[#1E40AF]/10' : ''}`}
+              onClick={() => setActiveTab("finance")}
+            >
+              <TrendingUp className="w-4 h-4 mr-3" />
+              {t('Finance')}
+            </Button>
+
+            <Button
               variant={activeTab === "reports" ? "secondary" : "ghost"}
               className={`w-full justify-start ${activeTab === "reports" ? 'bg-gradient-to-r from-[#EF4444]/10 to-[#1E40AF]/10' : ''}`}
               onClick={() => setActiveTab("reports")}
@@ -347,14 +401,53 @@ export function AdminDashboard() {
             </Button>
           </div>
 
-          <div className="mt-8 pt-8 border-t border-white/20">
-            <Button variant="outline" className="w-full" asChild>
+          <div className="mt-8 pt-8 border-t border-white/20 space-y-2">
+            <Button variant="outline" className="w-full justify-start" asChild>
               <Link to="/">
                 <Home className="w-4 h-4 mr-2" />
                 {t('Back to Site')}
               </Link>
             </Button>
+
+            <Button
+              variant="destructive"
+              className="w-full justify-start"
+              onClick={handleLogout}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              {t('Logout')}
+            </Button>
           </div>
+
+          {/* User Profile Section */}
+          {user && (
+            <div className="mt-8 pt-8 border-t border-white/20">
+              <div className="px-3 py-4 bg-white/5 rounded-lg">
+                <div className="flex items-center gap-3 mb-3">
+                  {user.avatar && (
+                    <img
+                      src={user.avatar}
+                      alt={user.firstName}
+                      className="w-10 h-10 rounded-full"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate text-white">
+                      {user.firstName} {user.lastName}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-xs">
+                  <span className="inline-block px-2.5 py-1 rounded-full bg-gradient-to-r from-[#EF4444]/20 to-[#1E40AF]/20 text-[#1E40AF]">
+                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </nav>
       </aside>
 
@@ -728,31 +821,43 @@ export function AdminDashboard() {
                       <TableCell>{vehicle.model}</TableCell>
                       <TableCell className="font-mono text-sm">{vehicle.licensePlate}</TableCell>
                       <TableCell>
-                        <Badge variant={
-                          vehicle.salikStatus === 'Synced' ? 'default' :
-                          vehicle.salikStatus === 'Pending' ? 'secondary' :
-                          'destructive'
-                        }>
-                          {t(vehicle.salikStatus)}
-                        </Badge>
+                        <span className={vehicle.fines > 0 ? "text-[#EF4444]" : "text-muted-foreground"}>
+                          AED {vehicle.fines > 0 ? vehicle.fines : "000"}
+                        </span>
                       </TableCell>
                       <TableCell>
                         {vehicle.fines > 0 ? (
                           <span className="text-[#EF4444]">AED {vehicle.fines}</span>
                         ) : (
-                          <span className="text-muted-foreground">-</span>
+                          <span className="text-muted-foreground">AED 000</span>
                         )}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{t('2 hours ago')}</TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleSyncSalik(vehicle)}
-                        >
-                          <RefreshCw className="w-3 h-3 mr-1" />
-                          {t('Sync Now')}
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title={t('Edit')}
+                            onClick={() => handleEditSalik(vehicle)}
+                            disabled={isLoading}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title={t('Sync Now')}
+                            onClick={() => handleSyncNow(vehicle)}
+                            disabled={isLoading}
+                          >
+                            {isLoading ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <RefreshCw className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -767,6 +872,10 @@ export function AdminDashboard() {
             <h3 className="mb-4">{t('Customer Management')}</h3>
             <p className="text-muted-foreground">{t('Customer database and management tools will be displayed here.')}</p>
           </Card>
+        )}
+
+        {activeTab === "finance" && (
+          <FinanceModule />
         )}
 
         {activeTab === "reports" && (
@@ -1290,6 +1399,71 @@ export function AdminDashboard() {
             >
               {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {t('Approve')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Salik Edit Dialog */}
+      <Dialog open={salikEditOpen} onOpenChange={setSalikEditOpen}>
+        <DialogContent className="backdrop-blur-xl bg-white/95 max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('Edit Salik Status')}</DialogTitle>
+            <DialogDescription>
+              {editingSalikVehicle && `${editingSalikVehicle.model} • ${editingSalikVehicle.licensePlate}`}
+            </DialogDescription>
+          </DialogHeader>
+
+          {editingSalikVehicle && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>{t('Current Status')}</Label>
+                <div className="p-3 bg-muted rounded-lg">
+                  <Badge variant={
+                    editingSalikVehicle.salikStatus === 'Synced' ? 'default' :
+                    editingSalikVehicle.salikStatus === 'Pending' ? 'secondary' :
+                    'destructive'
+                  }>
+                    {t(editingSalikVehicle.salikStatus)}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t('Outstanding Fines')}</Label>
+                <div className="p-3 bg-muted rounded-lg text-sm font-mono">
+                  {editingSalikVehicle.fines > 0 ? (
+                    <span className="text-[#EF4444]">AED {editingSalikVehicle.fines}</span>
+                  ) : (
+                    <span className="text-muted-foreground">AED 000</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t('Last Sync')}</Label>
+                <div className="p-3 bg-muted rounded-lg text-sm text-muted-foreground">
+                  {t('2 hours ago')}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setSalikEditOpen(false)}
+              disabled={isLoading}
+            >
+              {t('Cancel')}
+            </Button>
+            <Button
+              className="bg-gradient-to-r from-[#EF4444] to-[#1E40AF]"
+              onClick={handleSaveSalik}
+              disabled={isLoading}
+            >
+              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {t('Update')}
             </Button>
           </DialogFooter>
         </DialogContent>
